@@ -18,6 +18,7 @@ public class ConnectionRequest extends Model {
     @GeneratedValue(strategy = GenerationType.AUTO)
     public Long id;
 
+    public static  Finder<Long, ConnectionRequest> find=new Finder<Long, ConnectionRequest>(ConnectionRequest.class);
 
     @ManyToOne
     public User sender;

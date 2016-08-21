@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import models.Profile;
 import models.User;
+import play.data.DynamicForm;
 import play.data.FormFactory;
 import play.mvc.Controller;
 import play.mvc.Result;
@@ -13,7 +14,7 @@ import play.mvc.Result;
 import javax.inject.Inject;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collector;
+
 import java.util.stream.Collectors;
 
 /**
@@ -31,7 +32,7 @@ public class HomeController extends Controller {
      User user=User.find.byId(userId);
      Profile profile=Profile.find.byId(user.profile.id);
      ObjectNode data=objectMapper.createObjectNode();
-     data.set("suggestions",null);
+
      List<Long> connectedUserIds = user.connections.stream().map(x->x.id).collect(Collectors.toList());
      List<Long> connectionRequestsSentUserIds = user.connectionRequestSent.stream()
              .map(x->x.receiver.id).collect(Collectors.toList());
@@ -45,8 +46,42 @@ public class HomeController extends Controller {
                          return userJson;
                      })
              .collect(Collectors.toList());
+     data.set("suggestions",objectMapper.valueToTree(suggestions));
+     List<JsonNode> connected=user.connections.stream().map(x->{
+         User connectedUser=User.find.byId(x.id);
 
-     return ok();
+         Profile connectedProfile=Profile.find.byId(connectedUser.profile.id);
+         ObjectNode connectionJson = objectMapper.createObjectNode();
+         connectionJson.put("email",connectedUser.email);
+         connectionJson.put("firstName",connectedProfile.firstName);
+         connectionJson.put("lastName",connectedProfile.lastName);
+         return connectionJson;})
+             .collect(Collectors.toList());
+     data.set("connections",objectMapper.valueToTree(connected));
+     data.set("connectionrequestsreceived", objectMapper.valueToTree( user.connectionRequestReceived.stream()
+             .map(x -> {
+                 User requestor = User.find.byId(x.sender.id);
+                 Profile requestorProfile = Profile.find.byId(requestor.profile.id);
+                 ObjectNode requestorjson = objectMapper.createObjectNode();
+                 requestorjson.put("email", requestor.email);
+                 requestorjson.put("firstName", requestorProfile.firstName);
+                 requestorjson.put("lastName", requestorProfile.lastName);
+
+                 return requestorjson;
+             }).collect(Collectors.toList())));
+
+
+     return ok(data);
  }
+      public  Result updateProfile(Long userId){
+          DynamicForm form = formFactory.form().bindFromRequest();
+          User user = User.find.byId(userId);
+          Profile profile = Profile.find.byId(user.profile.id);
+          profile.company = form.get("company");
+          profile.firstName = form.get("firstName");
+          profile.lastName = form.get("lastName");
+          Profile.db().update(profile);
+          return ok();
 
+      }
 }
