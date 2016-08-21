@@ -1,7 +1,6 @@
 package models;
 
 import com.avaje.ebean.Model;
-import com.sun.org.apache.xpath.internal.operations.String;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -20,4 +19,9 @@ public class Profile extends Model {
     public String lastName;
     public String company;
 
+    public Profile(String firstName, String lastName) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+
+    }
 }
