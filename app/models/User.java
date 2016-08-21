@@ -45,7 +45,6 @@ public class User extends Model {
             @JoinColumn(name = "connection_id")
                         }
             )
-
     public Set<User> connections;
 
     public User(String email, String password) {
